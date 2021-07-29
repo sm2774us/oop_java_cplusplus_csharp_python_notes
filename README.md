@@ -280,3 +280,21 @@ curl http://localhost:50004/product {"title":"The Product Title.","productInvent
 
 ##### Applicability
 Use the Aggregator Microservices pattern when you need a unified API for various microservices, regardless the client device.
+
+#### CQRS
+![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+CQRS Command Query Responsibility Segregation - Separate the query side from the command side.
+
+##### Class Diagram
+![cqrs-pattern-uml-class-diagram](./assets/patterns/cqrs-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the CQRS pattern when
+
+* You want to scale the queries and commands independently.
+* You want to use different data models for queries and commands. Useful when dealing with complex domains.
+* You want to use architectures like event sourcing or task based UI.
+
+**Programmatic Example**
