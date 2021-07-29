@@ -183,7 +183,7 @@ public class ApiGateway {
 ```
 
 ##### Class Diagram
-![api-gateway-pattern-uml-diagram](./assets/patterns/api-gateway-pattern-uml-diagram.png)
+![api-gateway-pattern-uml-diagram](./assets/patterns/api-gateway-pattern-uml-class-diagram.png)
 
 ##### Applicability
 Use the API Gateway pattern when
