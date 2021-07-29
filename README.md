@@ -276,7 +276,7 @@ curl http://localhost:50004/product {"title":"The Product Title.","productInvent
 ```
 
 ##### Class diagram
-[aggregator-microservices-pattern-uml-class-diagram](./assets/patterns/aggregator-microservices-pattern-uml-class-diagram.png)
+![aggregator-microservices-pattern-uml-class-diagram](./assets/patterns/aggregator-microservices-pattern-uml-class-diagram.png)
 
 ##### Applicability
 Use the Aggregator Microservices pattern when you need a unified API for various microservices, regardless the client device.
