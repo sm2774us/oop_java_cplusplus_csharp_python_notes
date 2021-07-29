@@ -68,6 +68,13 @@ abstractions.<br />
 | Pattern | Categories |
 | :-- | :-- |
 | [API Gateway](#api-gateway) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG) ![microservices](./assets/patterns/microservices.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Aggregator Microservices](#aggregator-microservices) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG) ![microservices](./assets/patterns/microservices.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [CQRS](#cqrs) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Data Access Object](#data-access-object) | ![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Data Bus](#data-bus) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Data Mapper](#data-mapper) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Data Transfer Object](#data-transfer-object) | ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Domain Model](#domain-model) | ![model](./assets/patterns/model.PNG) ![architectural](./assets/patterns/architectural.PNG) |
 
 #### API Gateway
 ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG) ![microservices](./assets/patterns/microservices.PNG) ![architectural](./assets/patterns/architectural.PNG)
@@ -189,3 +196,87 @@ public class ApiGateway {
 Use the API Gateway pattern when
 
 * You're using microservices architecture and need a single point of aggregation for your microservice calls.
+
+#### Aggregator Microservices
+![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG) ![microservices](./assets/patterns/microservices.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+The user makes a single call to the aggregator service, and the aggregator then calls each relevant microservice.
+
+##### Explanation
+Real world example
+> Our web marketplace needs information about products and their current inventory. It makes a call to an aggregator service which in turn calls the product information microservice and product inventory microservice returning the combined information.
+>
+
+In plain words
+> Aggregator Microservice collects pieces of data from various microservices and returns an aggregate for processing.
+>
+
+Stack Overflow says
+> Aggregator Microservice invokes multiple services to achieve the functionality required by the application.
+>
+
+**Programmatic Example**
+Let's start from the data model. Here's our `Product`.
+```java
+public class Product {
+  private String title;
+  private int productInventories;
+  // getters and setters ->
+  ...
+}
+```
+
+Next we can introduce our `Aggregator` microservice. It contains clients `ProductInformationClient` and `ProductInventoryClient` for calling respective microservices.
+
+```java
+@RestController
+public class Aggregator {
+
+  @Resource
+  private ProductInformationClient informationClient;
+
+  @Resource
+  private ProductInventoryClient inventoryClient;
+
+  @RequestMapping(path = "/product", method = RequestMethod.GET)
+  public Product getProduct() {
+
+    var product = new Product();
+    var productTitle = informationClient.getProductTitle();
+    var productInventory = inventoryClient.getProductInventories();
+
+    //Fallback to error message
+    product.setTitle(requireNonNullElse(productTitle, "Error: Fetching Product Title Failed"));
+
+    //Fallback to default error inventory
+    product.setProductInventories(requireNonNullElse(productInventory, -1));
+
+    return product;
+  }
+}
+```
+
+Here's the essence of information microservice implementation. Inventory microservice is similar, it just returns inventory counts.
+
+```java
+@RestController
+public class InformationController {
+  @RequestMapping(value = "/information", method = RequestMethod.GET)
+  public String getProductTitle() {
+    return "The Product Title.";
+  }
+}
+```
+
+Now calling our `Aggregator` REST API returns the product information.
+
+```bash
+curl http://localhost:50004/product {"title":"The Product Title.","productInventories":5}
+```
+
+##### Class diagram
+[aggregator-microservices-pattern-uml-class-diagram](./assets/patterns/aggregator-microservices-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Aggregator Microservices pattern when you need a unified API for various microservices, regardless the client device.
