@@ -75,6 +75,19 @@ abstractions.<br />
 | [Data Mapper](#data-mapper) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
 | [Data Transfer Object](#data-transfer-object) | ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
 | [Domain Model](#domain-model) | ![model](./assets/patterns/model.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Event Driven Architecture](#event-driven-architecture) | ![reactive](./assets/reactive.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Event Sourcing](#event-sourcing) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Hexagonal Architecture](#hexagonal-architecture) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Layers](#layers) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Model-View-Controller](#model-view-controller) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Model-View-Presenter](#model-view-presenter) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Model-View-ViewModel](#model-view-viewmodel) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Naked-Objects](#naked-objects) | ![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Repository](#repository) | ![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Serverless](#serverless) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Service Layer](#service-layer) | ![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Service Locator](#service-locator) | ![game-programming](./assets/patterns/game-programming.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
+| [Unit Of Work](#unit-of-work) | ![data-access](./assets/patterns/data-access.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG) |
 
 #### API Gateway
 ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG) ![microservices](./assets/patterns/microservices.PNG) ![architectural](./assets/patterns/architectural.PNG)
@@ -297,4 +310,258 @@ Use the CQRS pattern when
 * You want to use different data models for queries and commands. Useful when dealing with complex domains.
 * You want to use architectures like event sourcing or task based UI.
 
+#### Data Access Object
+![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Object provides an abstract interface to some type of database or other persistence mechanism.
+
+##### Explanation
+Real world example
+
+> There's a set of customers that need to be persisted to database. Additionally we need the whole set of CRUD (create/read/update/delete) operations so we can operate on customers easily.
+>
+
+In plain words
+
+> DAO is an interface we provide over the base persistence mechanism.
+>
+
+Wikipedia says
+
+> In computer software, a data access object (DAO) is a pattern that provides an abstract interface to some type of database or other persistence mechanism.
+>
+
 **Programmatic Example**
+
+Walking through our customers example, here's the basic `Customer` entity.
+
+```java
+public class Customer {
+
+  private int id;
+  private String firstName;
+  private String lastName;
+
+  public Customer(int id, String firstName, String lastName) {
+    this.id = id;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+  // getters and setters ->
+  ...
+}
+```
+
+Here's the `CustomerDao` interface and two different implementations for it. `InMemoryCustomerDao` keeps a simple map of customers in memory while `DBCustomerDao` is the real RDBMS implementation.
+
+```java
+public interface CustomerDao {
+
+  Stream<Customer> getAll() throws Exception;
+
+  Optional<Customer> getById(int id) throws Exception;
+
+  boolean add(Customer customer) throws Exception;
+
+  boolean update(Customer customer) throws Exception;
+
+  boolean delete(Customer customer) throws Exception;
+}
+
+public class InMemoryCustomerDao implements CustomerDao {
+
+  private final Map<Integer, Customer> idToCustomer = new HashMap<>();
+
+  // implement the interface using the map
+  ...
+}
+
+@Slf4j
+public class DbCustomerDao implements CustomerDao {
+
+  private final DataSource dataSource;
+
+  public DbCustomerDao(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
+  // implement the interface using the data source
+  ...
+```
+
+Finally here's how we use our DAO to manage customers.
+
+```java
+    final var dataSource = createDataSource();
+    createSchema(dataSource);
+    final var customerDao = new DbCustomerDao(dataSource);
+    
+    addCustomers(customerDao);
+    log.info(ALL_CUSTOMERS);
+    try (var customerStream = customerDao.getAll()) {
+      customerStream.forEach((customer) -> log.info(customer.toString()));
+    }
+    log.info("customerDao.getCustomerById(2): " + customerDao.getById(2));
+    final var customer = new Customer(4, "Dan", "Danson");
+    customerDao.add(customer);
+    log.info(ALL_CUSTOMERS + customerDao.getAll());
+    customer.setFirstName("Daniel");
+    customer.setLastName("Danielson");
+    customerDao.update(customer);
+    log.info(ALL_CUSTOMERS);
+    try (var customerStream = customerDao.getAll()) {
+      customerStream.forEach((cust) -> log.info(cust.toString()));
+    }
+    customerDao.delete(customer);
+    log.info(ALL_CUSTOMERS + customerDao.getAll());
+    
+    deleteSchema(dataSource);
+```
+
+The program output:
+
+```
+customerDao.getAllCustomers(): 
+Customer{id=1, firstName='Adam', lastName='Adamson'}
+Customer{id=2, firstName='Bob', lastName='Bobson'}
+Customer{id=3, firstName='Carl', lastName='Carlson'}
+customerDao.getCustomerById(2): Optional[Customer{id=2, firstName='Bob', lastName='Bobson'}]
+customerDao.getAllCustomers(): java.util.stream.ReferencePipeline$Head@7cef4e59
+customerDao.getAllCustomers(): 
+Customer{id=1, firstName='Adam', lastName='Adamson'}
+Customer{id=2, firstName='Bob', lastName='Bobson'}
+Customer{id=3, firstName='Carl', lastName='Carlson'}
+Customer{id=4, firstName='Daniel', lastName='Danielson'}
+customerDao.getAllCustomers(): java.util.stream.ReferencePipeline$Head@2db0f6b2
+customerDao.getAllCustomers(): 
+Customer{id=1, firstName='Adam', lastName='Adamson'}
+Customer{id=2, firstName='Bob', lastName='Bobson'}
+Customer{id=3, firstName='Carl', lastName='Carlson'}
+customerDao.getCustomerById(2): Optional[Customer{id=2, firstName='Bob', lastName='Bobson'}]
+customerDao.getAllCustomers(): java.util.stream.ReferencePipeline$Head@12c8a2c0
+customerDao.getAllCustomers(): 
+Customer{id=1, firstName='Adam', lastName='Adamson'}
+Customer{id=2, firstName='Bob', lastName='Bobson'}
+Customer{id=3, firstName='Carl', lastName='Carlson'}
+Customer{id=4, firstName='Daniel', lastName='Danielson'}
+customerDao.getAllCustomers(): java.util.stream.ReferencePipeline$Head@6ec8211c
+```
+
+##### Class Diagram
+![dao-pattern-uml-class-diagram](./assets/patterns/dao-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Data Access Object in any of the following situations:
+  * When you want to consolidate how the data layer is accessed.
+  * When you want to avoid writing multiple data retrieval/persistence layers.
+
+#### Data Mapper
+![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+A layer of mappers that moves data between objects and a database while keeping them independent of each other and the mapper itself
+
+##### Class Diagram
+![data-mapper-pattern-uml-class-diagram](./assets/data-mapper-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Data Mapper in any of the following situations
+
+  * when you want to decouple data objects from DB access layer
+  * when you want to write multiple data retrieval/persistence implementations
+  
+#### Data Transfer Object
+![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Pass data with multiple attributes in one shot from client to server, to avoid multiple calls to remote server.
+
+##### Explanation
+Real world example
+
+> We need to fetch information about customers from remote database. Instead of querying the attributes one at a time, we use DTOs to transfer all the relevant attributes in a single shot.
+>
+
+In plain words
+
+> Using DTO relevant information can be fetched with a single backend query.
+>
+
+Wikipedia says
+
+> In the field of programming a data transfer object (DTO) is an object that carries data between processes. The motivation for its use is that communication between processes is usually done resorting to remote interfaces (e.g. web services), where each call is an expensive operation. Because the majority of the cost of each call is related to the round-trip time between the client and the server, one way of reducing the number of calls is to use an object (the DTO) that aggregates the data that would have been transferred by the several calls, but that is served by one call only.
+>
+
+**Programmatic Example**
+
+Let's first introduce our simple `CustomerDTO` class.
+
+```java
+public class CustomerDto {
+  private final String id;
+  private final String firstName;
+  private final String lastName;
+
+  public CustomerDto(String id, String firstName, String lastName) {
+    this.id = id;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getFirstName() {
+    return firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+}
+```
+
+`CustomerResource` class acts as the server for customer information.
+
+```java
+public class CustomerResource {
+  private final List<CustomerDto> customers;
+
+  public CustomerResource(List<CustomerDto> customers) {
+    this.customers = customers;
+  }
+
+  public List<CustomerDto> getAllCustomers() {
+    return customers;
+  }
+
+  public void save(CustomerDto customer) {
+    customers.add(customer);
+  }
+
+  public void delete(String customerId) {
+    customers.removeIf(customer -> customer.getId().equals(customerId));
+  }
+}
+```
+
+Now fetching customer information is easy since we have the DTOs.
+
+```java
+    var allCustomers = customerResource.getAllCustomers();
+    allCustomers.forEach(customer -> LOGGER.info(customer.getFirstName()));
+    // Kelly
+    // Alfonso
+```
+
+##### Class Diagram
+![dto-pattern-uml-class-diagram](./assets/patterns/dto-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Data Transfer Object pattern when:
+  * The client is asking for multiple information. And the information is related.
+  * When you want to boost the performance to get resources.
+  * You want reduced number of remote calls.
+
