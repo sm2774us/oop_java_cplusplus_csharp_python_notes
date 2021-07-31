@@ -47,7 +47,7 @@ abstractions.<br />
 
 --------
 
-### SOLID Short Control List
+### SOLID Principles Check List
 - Do methods in the class have similar responsibilities? (SRP)
 - Are there any method in the class that functions different based on different variables? (OCP)
 - Are there any functionless methods/properties which comes from base class/interface in your derived classes? (LSP & ISP)
@@ -90,7 +90,238 @@ Reusing design patterns helps to prevent subtle issues that can cause major prob
   An **architectural pattern** is a general, reusable solution to a commonly occurring problem in software architecture within a given context.
 
 * **Integration Patterns**
-  **Integration patterns**are concerned with how software applications communicate and exchange data.
+  **Integration patterns** are concerned with how software applications communicate and exchange data.
+
+### **Creational Pattern**
+> A **_creational pattern_** abstracts out the instantiation process. They help make a system independent of how its objects are created, composed, and represented.
+>
+
+| Pattern | Categories |
+| :-- | :-- |
+| [Abstract Factory](#abstract-factory) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Builder](#builder) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Coverter](#converter) | ![decoupling](./assets/patterns/decoupling.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Dependency Injection](#dependency-injection) | ![decoupling](./assets/patterns/decoupling.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Factory](#factory) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Factory Kit](#factory-kit) | ![extensibility](./assets/patterns/extensibility.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Factory Method](#factory-method) | ![extensibility](./assets/patterns/extensibility.PNG) ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Mono State](#mono-state) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Multiton](#multiton) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Object Mother](#object-mother) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Object Pool](#object-pool) | ![game-programming](./assets/patterns/game-programming.PNG) ![performance](./assets/patterns/performance.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Property](#property) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Prototype](#prototype) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Registry](#registry) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Singleton](#singleton) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Step Builder](#step-builder) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+| [Value Object](#value-object) | ![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG) |
+
+#### Abstract Factory
+![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Aggregate calls to microservices in a single location, the API Gateway. The user makes a single call to the API Gateway, and the API Gateway then calls each relevant microservice.
+
+##### Explanation
+
+
+##### Also known as
+Kit
+
+##### Intent
+Provide an interface for creating families of related or dependent objects without specifying their concrete classes.
+
+##### Explanation
+Real-world example
+
+> To create a kingdom we need objects with a common theme. The elven kingdom needs an elven king, elven castle, and elven army whereas the orcish kingdom needs an orcish king, orcish castle, and orcish army. There is a dependency between the objects in the kingdom.
+>
+
+In plain words
+
+> A factory of factories; a factory that groups the individual but related/dependent factories together without specifying their concrete classes.
+>
+
+Wikipedia says
+
+> The abstract factory pattern provides a way to encapsulate a group of individual factories that have a common theme without specifying their concrete classes
+>
+
+**Programmatic Example**
+
+Translating the kingdom example above. First of all, we have some interfaces and implementation for the objects in the kingdom.
+
+```java
+public interface Castle {
+  String getDescription();
+}
+
+public interface King {
+  String getDescription();
+}
+
+public interface Army {
+  String getDescription();
+}
+
+// Elven implementations ->
+public class ElfCastle implements Castle {
+  static final String DESCRIPTION = "This is the elven castle!";
+  @Override
+  public String getDescription() {
+    return DESCRIPTION;
+  }
+}
+public class ElfKing implements King {
+  static final String DESCRIPTION = "This is the elven king!";
+  @Override
+  public String getDescription() {
+    return DESCRIPTION;
+  }
+}
+public class ElfArmy implements Army {
+  static final String DESCRIPTION = "This is the elven Army!";
+  @Override
+  public String getDescription() {
+    return DESCRIPTION;
+  }
+}
+
+// Orcish implementations similarly -> ...
+```
+
+Then we have the abstraction and implementations for the kingdom factory.
+
+```java
+public interface KingdomFactory {
+  Castle createCastle();
+  King createKing();
+  Army createArmy();
+}
+
+public class ElfKingdomFactory implements KingdomFactory {
+  public Castle createCastle() {
+    return new ElfCastle();
+  }
+  public King createKing() {
+    return new ElfKing();
+  }
+  public Army createArmy() {
+    return new ElfArmy();
+  }
+}
+
+public class OrcKingdomFactory implements KingdomFactory {
+  public Castle createCastle() {
+    return new OrcCastle();
+  }
+  public King createKing() {
+    return new OrcKing();
+  }
+  public Army createArmy() {
+    return new OrcArmy();
+  }
+}
+```
+
+Now we have the abstract factory that lets us make a family of related objects i.e. elven kingdom factory creates elven castle, king and army, etc.
+
+```java
+var factory = new ElfKingdomFactory();
+var castle = factory.createCastle();
+var king = factory.createKing();
+var army = factory.createArmy();
+
+castle.getDescription();
+king.getDescription();
+army.getDescription();
+```
+
+Program output:
+
+```
+This is the elven castle!
+This is the elven king!
+This is the elven Army!
+```
+
+Now, we can design a factory for our different kingdom factories. In this example, we created `FactoryMaker`, responsible for returning an instance of either `ElfKingdomFactory` or `OrcKingdomFactory`.
+The client can use `FactoryMaker` to create the desired concrete factory which, in turn, will produce different concrete objects (derived from `Army`, `King`, `Castle`).
+In this example, we also used an enum to parameterize which type of kingdom factory the client will ask for.
+
+```java
+public static class FactoryMaker {
+
+  public enum KingdomType {
+    ELF, ORC
+  }
+
+  public static KingdomFactory makeFactory(KingdomType type) {
+    switch (type) {
+      case ELF:
+        return new ElfKingdomFactory();
+      case ORC:
+        return new OrcKingdomFactory();
+      default:
+        throw new IllegalArgumentException("KingdomType not supported.");
+    }
+  }
+}
+
+public static void main(String[] args) {
+  var app = new App();
+
+  LOGGER.info("Elf Kingdom");
+  app.createKingdom(FactoryMaker.makeFactory(KingdomType.ELF));
+  LOGGER.info(app.getArmy().getDescription());
+  LOGGER.info(app.getCastle().getDescription());
+  LOGGER.info(app.getKing().getDescription());
+
+  LOGGER.info("Orc Kingdom");
+  app.createKingdom(FactoryMaker.makeFactory(KingdomType.ORC));
+  -- similar use of the orc factory
+}
+```
+
+##### Class Diagram
+![abstract-factory-pattern-uml-class-diagram](./assets/patterns/abstract-factory-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Abstract Factory pattern when
+
+  * The system should be independent of how its products are created, composed, and represented
+  * The system should be configured with one of the multiple families of products
+  * The family of related product objects is designed to be used together, and you need to enforce this constraint
+  * You want to provide a class library of products, and you want to reveal just their interfaces, not their implementations
+  * The lifetime of the dependency is conceptually shorter than the lifetime of the consumer.
+  * You need a run-time value to construct a particular dependency
+  * You want to decide which product to call from a family at runtime.
+  * You need to supply one or more parameters only known at run-time before you can resolve a dependency.
+  * When you need consistency among products
+  * You don’t want to change existing code when adding new products or families of products to the program.
+
+Example use cases
+
+  * Selecting to call to the appropriate implementation of FileSystemAcmeService or DatabaseAcmeService or NetworkAcmeService at runtime.
+  * Unit test case writing becomes much easier
+  * UI tools for different OS
+
+##### Consequences
+  * Dependency injection in java hides the service class dependencies that can lead to runtime errors that would have been caught at compile time.
+  * While the pattern is great when creating predefined objects, adding the new ones might be challenging.
+  * The code becomes more complicated than it should be since a lot of new interfaces and classes are introduced along with the pattern.
+
+##### Tutorials
+  * [Abstract Factory Pattern Tutorial](https://www.journaldev.com/1418/abstract-factory-design-pattern-in-java)
+
+##### Known uses
+  * [javax.xml.parsers.DocumentBuilderFactory](http://docs.oracle.com/javase/8/docs/api/javax/xml/parsers/DocumentBuilderFactory.html)
+  * [javax.xml.transform.TransformerFactory](http://docs.oracle.com/javase/8/docs/api/javax/xml/transform/TransformerFactory.html#newInstance--)
+  * [javax.xml.xpath.XPathFactory](http://docs.oracle.com/javase/8/docs/api/javax/xml/xpath/XPathFactory.html#newInstance--)
+
+##### Related patterns
+  * [Factory Method](#factory-method)
+  * [Factory Kit](#factory-kit)
 
 ### **Architectural Pattern**
 > An **_architectural pattern_** is a general, reusable solution to a commonly occurring problem in software architecture within a given context. Architectural patterns are similar to software design pattern but have a broader scope.
@@ -1224,3 +1455,725 @@ To deploy the example, go to model-view-viewmodel folder and run:
   can be difficult, and that large-scale data binding can lead to lower performance - Ref: [MVVM-Wiki](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel)
 * Can be hard to design ViewModel for larger applications.
 * For complex databinding, debugging can be difficult.
+
+#### Naked Objects
+![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+The Naked Objects architectural pattern is well suited for rapid prototyping. Using the pattern, you only need to write the domain objects, everything else is autogenerated by the framework.
+
+##### Class Diagram
+![naked-objects-pattern-uml-class-diagram](./assets/patterns/naked-objects-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Naked Objects pattern when
+
+  * You are prototyping and need fast development cycle
+  * An autogenerated user interface is good enough
+  * You want to automatically publish the domain as REST services
+
+##### Real world examples
+  * [Apache Isis](https://isis.apache.org/)
+
+#### Repository
+![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Repository layer is added between the domain and data mapping layers to isolate domain objects from details of the database access code and to minimize scattering and duplication of query code. The Repository pattern is especially useful in systems where number of domain classes is large or heavy querying is utilized.
+
+##### Explanation
+Real world example
+
+> Let's say we need a persistent data store for persons. Adding new persons and searching for them according to different criteria must be easy.
+>
+
+In plain words
+
+> Repository architectural pattern creates a uniform layer of data repositories that can be used for CRUD operations.
+>
+
+[Microsoft documentation](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design) says
+
+> Repositories are classes or components that encapsulate the logic required to access data sources. They centralize common data access functionality, providing better maintainability and decoupling the infrastructure or technology used to access databases from the domain model layer.
+>
+
+**Programmatic Example**
+
+Let's first look at the person entity that we need to persist.
+
+```java
+@Entity
+public class Person {
+
+  @Id
+  @GeneratedValue
+  private Long id;
+  private String name;
+  private String surname;
+  private int age;
+
+  public Person() {
+  }
+
+  public Person(String name, String surname, int age) {
+    this.name = name;
+    this.surname = surname;
+    this.age = age;
+  }
+
+  // getters and setters ->
+  ...
+}
+```
+
+We are using Spring Data to create the `PersonRepository` so it becomes really simple.
+
+```java
+@Repository
+public interface PersonRepository
+    extends CrudRepository<Person, Long>, JpaSpecificationExecutor<Person> {
+
+  Person findByName(String name);
+}
+```
+
+Additionally we define a helper class `PersonSpecifications` for specification queries.
+
+```java
+public class PersonSpecifications {
+
+  public static class AgeBetweenSpec implements Specification<Person> {
+
+    private final int from;
+
+    private final int to;
+
+    public AgeBetweenSpec(int from, int to) {
+      this.from = from;
+      this.to = to;
+    }
+
+    @Override
+    public Predicate toPredicate(Root<Person> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+      return cb.between(root.get("age"), from, to);
+    }
+
+  }
+
+  public static class NameEqualSpec implements Specification<Person> {
+
+    public String name;
+
+    public NameEqualSpec(String name) {
+      this.name = name;
+    }
+
+    public Predicate toPredicate(Root<Person> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+      return cb.equal(root.get("name"), this.name);
+    }
+  }
+
+}
+```
+
+And here's the repository example in action.
+
+```java
+    var peter = new Person("Peter", "Sagan", 17);
+    var nasta = new Person("Nasta", "Kuzminova", 25);
+    var john = new Person("John", "lawrence", 35);
+    var terry = new Person("Terry", "Law", 36);
+
+    repository.save(peter);
+    repository.save(nasta);
+    repository.save(john);
+    repository.save(terry);
+
+    LOGGER.info("Count Person records: {}", repository.count());
+
+    var persons = (List<Person>) repository.findAll();
+    persons.stream().map(Person::toString).forEach(LOGGER::info);
+
+    nasta.setName("Barbora");
+    nasta.setSurname("Spotakova");
+    repository.save(nasta);
+
+    repository.findById(2L).ifPresent(p -> LOGGER.info("Find by id 2: {}", p));
+    repository.deleteById(2L);
+
+    LOGGER.info("Count Person records: {}", repository.count());
+
+    repository
+        .findOne(new PersonSpecifications.NameEqualSpec("John"))
+        .ifPresent(p -> LOGGER.info("Find by John is {}", p));
+
+    persons = repository.findAll(new PersonSpecifications.AgeBetweenSpec(20, 40));
+
+    LOGGER.info("Find Person with age between 20,40: ");
+    persons.stream().map(Person::toString).forEach(LOGGER::info);
+
+    repository.deleteAll();
+```
+
+Program output:
+
+```
+Count Person records: 4
+Person [id=1, name=Peter, surname=Sagan, age=17]
+Person [id=2, name=Nasta, surname=Kuzminova, age=25]
+Person [id=3, name=John, surname=lawrence, age=35]
+Person [id=4, name=Terry, surname=Law, age=36]
+Find by id 2: Person [id=2, name=Barbora, surname=Spotakova, age=25]
+Count Person records: 3
+Find by John is Person [id=3, name=John, surname=lawrence, age=35]
+Find Person with age between 20,40: 
+Person [id=3, name=John, surname=lawrence, age=35]
+Person [id=4, name=Terry, surname=Law, age=36]
+```
+
+##### Class Diagram
+![repository-pattern-uml-class-diagram](./assets/patterns/repository-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Repository pattern when
+
+  * The number of domain objects is large.
+  * You want to avoid duplication of query code.
+  * You want to keep the database querying code in single place.
+  * You have multiple data sources.
+
+##### Real World Examples
+* [Spring Data](http://projects.spring.io/spring-data/)
+
+#### Serverless
+![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Serverless
+Serverless eliminates the need to plan for infrastructure and let's you focus on your application.
+
+Following are optimization katas you should be aware of while building a serverless applications
+
+* The Lean function
+  - Concise logic - Use functions to transform, not transport (utilize some of the integration available from the provider to transport), and make sure you read only what you need
+  - Efficient/single purpose code - avoid conditional/routing logic and break down into individual functions, avoid "fat"/monolithic functions and control the dependencies in the function deployment package to reduce the load time for your function
+  - ephemeral environment - Utilize container start for expensive initializations
+* Eventful Invocations
+  - Succinct payloads - Scrutinize the event as much as possible, and watch for payload constraints (async - 128K)
+  - resilient routing - Understand retry policies and leverage dead letter queues (SQS or SNS for replays) and remember retries count as invocations
+  - concurrent execution - lambda thinks of it's scale in terms of concurrency and its not request based/duration based. Lambda will spin up the number of instances based on the request.
+* Coordinated calls
+  - Decoupled via APIs - best practice to setup your application is to have API's as contracts that ensures separation of concerns
+  - scale-matched downstream - make sure when Lambda is calling downstream components, you are matching scale configuration to it (by specifying max concurrency based on downstream services)
+  - secured - Always ask a question, do I need a VPC?
+* Serviceful operations
+  - Automated - use automated tools to manage and maintain the stack
+  - monitored applications - use monitoring services to get holistic view of your serverless applications
+
+##### Intent
+Whether to reduce your infrastructure costs, shrink the time you spend on ops tasks, simplify your deployment processes, reach infinite scalability, serverless cuts time to market in half.
+
+##### Explanation
+Serverless computing is a cloud computing execution model in which the cloud provider dynamically manages the allocation of machine resources. Pricing is based on the actual amount of resources consumed by an application, rather than on pre-purchased units of capacity.
+
+##### Class Diagram
+![serverless-pattern-uml-class-diagram](./assets/patterns/serverless-pattern-uml-class-diagram.png)
+
+##### Serverless framework
+[Serverless](https://serverless.com/) is a toolkit for deploying and operating serverless architectures.
+
+##### (Function as a Service or "FaaS")
+The term ‘Serverless’ is confusing since with such applications there are both server hardware and server processes running somewhere, but the difference to normal approaches is that the organization building and supporting a ‘Serverless’ application is not looking after the hardware or the processes - they are outsourcing this to a vendor.
+
+Some of the Serverless Cloud Providers are
+![serverless-cloud-providers](./assets/serverless-cloud-providers.PNG)
+
+Anything that triggers an Lambda Function to execute is regarded by the Framework as an Event. Most of the Serverless Cloud Providers support following Events - Http - PubSub Events - scheduled
+
+AWS supports processing event generated from AWS Services (S3/Cloudwatch/etc) and using aws as a compute engine is our first choice.
+
+##### (Backend as a Service or "BaaS")
+This example creates a backend for ‘persons’ collection which uses DynamoDB NoSQL database service also provided by Amazon.
+
+##### AWS lambda function implementation
+[AWS Lambda SDK](https://aws.amazon.com/sdk-for-java/) provides pre-defined interface `com.amazonaws.services.lambda.runtime.RequestHandler` to implement our lambda function.
+```java
+public class LambdaInfoApiHandler implements RequestHandler<Map<String, Object>, ApiGatewayResponse> {
+
+  private static final Logger LOG = Logger.getLogger(LambdaInfoApiHandler.class);
+  private static final Integer SUCCESS_STATUS_CODE = 200;
+
+
+  @Override
+  public ApiGatewayResponse handleRequest(Map<String, Object> input, Context context) {
+    
+  }
+}
+```
+handleRequest method is where the function code is implemented. Context provides useful information about Lambda execution environment. AWS Lambda function needs a deployment package. This package is either a .zip or .jar file that contains all the dependencies of the function.
+
+`serverless.yml` contains configuration to manage deployments for your functions.
+
+##### Run example in local
+###### Prerequisites
+* Node.js v6.5.0 or later.
+* Serverless CLI v1.9.0 or later. You can run npm install -g serverless to install it.
+* An AWS account. If you don't already have one, you can sign up for a free trial that includes 1 million free Lambda requests per month.
+* Set-up your Provider Credentials. Watch the video on setting up credentials
+
+###### build and deploy
+  * `cd serverless`
+  * `mvn clean package`
+  * `serverless deploy --stage=dev --verbose`
+  
+Based on the configuration in serverless.yml serverless framework creates following resources
+
+  * CloudFormation stack for S3 (ServerlessDeploymentBucket)
+  * IAM Role (IamRoleLambdaExecution)
+  * CloudWatch (log groups)
+  * API Gateway (ApiGatewayRestApi)
+  * Lambda function
+  * DynamoDB collection
+
+The command will print out Stack Outputs which looks something like this
+
+```
+endpoints:
+  GET - https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/info
+  POST - https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/api/person
+  GET - https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/api/person/{id}
+```
+```
+CurrentTimeLambdaFunctionQualifiedArn: arn:aws:lambda:us-east-1:xxxxxxxxxxx:function:lambda-info-http-endpoint-dev-currentTime:4
+ServiceEndpoint: https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev
+ServerlessDeploymentBucketName: lambda-info-http-endpoin-serverlessdeploymentbuck-2u8uz2i7cap2
+```
+
+Access the endpoint to invoke the function.
+Use the following cURL commands to test the endpoints
+
+```
+curl -X GET \
+  https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/info \
+  -H 'cache-control: no-cache'
+curl -X POST \
+  https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/api/person \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: application/json' \
+  -d '{
+	"firstName": "Thor",
+	"lastName": "Odinson",
+	"address": {
+		"addressLineOne": "1 Odin ln",
+		"addressLineTwo": "100",
+		"city": "Asgard",
+		"state": "country of the Gods",
+		"zipCode": "00001"
+	}
+}'
+curl -X GET \
+  https://xxxxxxxxx.execute-api.us-east-1.amazonaws.com/dev/api/person/{id} \
+  -H 'cache-control: no-cache'
+```
+
+#### Service Layer
+![data-access](./assets/patterns/data-access.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Service Layer is an abstraction over domain logic. It defines application's boundary with a layer of services that establishes a set of available operations and coordinates the application's response in each operation.
+
+##### Explanation
+Typically applications require different kinds of interfaces to the data they store and the logic they implement. Despite their different purposes, these interfaces often need common interactions with the application to access and manipulate its data and invoke its business logic. Encoding the logic of the interactions separately in each module causes a lot of duplication. It's better to centralize building the business logic inside single Service Layer to avoid these pitfalls.
+
+Real world example
+
+> We are writing an application that tracks wizards, spellbooks and spells. Wizards may have spellbooks and spellbooks may have spells.
+>
+
+In plain words
+
+> Service Layer is an abstraction over application's business logic.
+>
+
+Wikipedia says
+
+> Service layer is an architectural pattern, applied within the service-orientation design paradigm, which aims to organize the services, within a service inventory, into a set of logical layers. Services that are categorized into a particular layer share functionality. This helps to reduce the conceptual overhead related to managing the service inventory, as the services belonging to the same layer address a smaller set of activities.
+>
+
+**Programmatic Example**
+
+The example application demonstrates interactions between a client `App` and a service `MagicService` that allows interaction between wizards, spellbooks and spells. The service is implemented with 3-layer architecture (entity, dao, service).
+
+For this explanation we are looking at one vertical slice of the system. Let's start from the entity layer and look at `Wizard` class. Other entities not shown here are `Spellbook` and `Spell`.
+
+```java
+@Entity
+@Table(name = "WIZARD")
+public class Wizard extends BaseEntity {
+
+  @Id
+  @GeneratedValue
+  @Column(name = "WIZARD_ID")
+  private Long id;
+
+  private String name;
+
+  @ManyToMany(cascade = CascadeType.ALL)
+  private Set<Spellbook> spellbooks;
+
+  public Wizard() {
+    spellbooks = new HashSet<>();
+  }
+
+  public Wizard(String name) {
+    this();
+    this.name = name;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Set<Spellbook> getSpellbooks() {
+    return spellbooks;
+  }
+
+  public void setSpellbooks(Set<Spellbook> spellbooks) {
+    this.spellbooks = spellbooks;
+  }
+
+  public void addSpellbook(Spellbook spellbook) {
+    spellbook.getWizards().add(this);
+    spellbooks.add(spellbook);
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
+}
+```
+
+Above the entity layer we have DAOs. For `Wizard` the DAO layer looks as follows.
+
+```java
+public interface WizardDao extends Dao<Wizard> {
+
+  Wizard findByName(String name);
+}
+
+public class WizardDaoImpl extends DaoBaseImpl<Wizard> implements WizardDao {
+
+  @Override
+  public Wizard findByName(String name) {
+    Transaction tx = null;
+    Wizard result;
+    try (var session = getSessionFactory().openSession()) {
+      tx = session.beginTransaction();
+      var criteria = session.createCriteria(persistentClass);
+      criteria.add(Restrictions.eq("name", name));
+      result = (Wizard) criteria.uniqueResult();
+      tx.commit();
+    } catch (Exception e) {
+      if (tx != null) {
+        tx.rollback();
+      }
+      throw e;
+    }
+    return result;
+  }
+}
+```
+
+Next we can look at the Service Layer, which in our case consists of a single `MagicService`.
+
+```java
+public interface MagicService {
+
+  List<Wizard> findAllWizards();
+
+  List<Spellbook> findAllSpellbooks();
+
+  List<Spell> findAllSpells();
+
+  List<Wizard> findWizardsWithSpellbook(String name);
+
+  List<Wizard> findWizardsWithSpell(String name);
+}
+
+public class MagicServiceImpl implements MagicService {
+
+  private final WizardDao wizardDao;
+  private final SpellbookDao spellbookDao;
+  private final SpellDao spellDao;
+
+  public MagicServiceImpl(WizardDao wizardDao, SpellbookDao spellbookDao, SpellDao spellDao) {
+    this.wizardDao = wizardDao;
+    this.spellbookDao = spellbookDao;
+    this.spellDao = spellDao;
+  }
+
+  @Override
+  public List<Wizard> findAllWizards() {
+    return wizardDao.findAll();
+  }
+
+  @Override
+  public List<Spellbook> findAllSpellbooks() {
+    return spellbookDao.findAll();
+  }
+
+  @Override
+  public List<Spell> findAllSpells() {
+    return spellDao.findAll();
+  }
+
+  @Override
+  public List<Wizard> findWizardsWithSpellbook(String name) {
+    var spellbook = spellbookDao.findByName(name);
+    return new ArrayList<>(spellbook.getWizards());
+  }
+
+  @Override
+  public List<Wizard> findWizardsWithSpell(String name) {
+    var spell = spellDao.findByName(name);
+    var spellbook = spell.getSpellbook();
+    return new ArrayList<>(spellbook.getWizards());
+  }
+}
+```
+
+And finally we can show how the client `App` interacts with `MagicService` in the Service Layer.
+
+```java
+    var service = new MagicServiceImpl(wizardDao, spellbookDao, spellDao);
+    LOGGER.info("Enumerating all wizards");
+    service.findAllWizards().stream().map(Wizard::getName).forEach(LOGGER::info);
+    LOGGER.info("Enumerating all spellbooks");
+    service.findAllSpellbooks().stream().map(Spellbook::getName).forEach(LOGGER::info);
+    LOGGER.info("Enumerating all spells");
+    service.findAllSpells().stream().map(Spell::getName).forEach(LOGGER::info);
+    LOGGER.info("Find wizards with spellbook 'Book of Idores'");
+    var wizardsWithSpellbook = service.findWizardsWithSpellbook("Book of Idores");
+    wizardsWithSpellbook.forEach(w -> LOGGER.info("{} has 'Book of Idores'", w.getName()));
+    LOGGER.info("Find wizards with spell 'Fireball'");
+    var wizardsWithSpell = service.findWizardsWithSpell("Fireball");
+    wizardsWithSpell.forEach(w -> LOGGER.info("{} has 'Fireball'", w.getName()));
+```
+
+##### Class Diagram
+![service-layer-pattern-uml-class-diagram](./assets/patterns/service-layer-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Service Layer pattern when
+
+  * You want to encapsulate domain logic under API
+  * You need to implement multiple interfaces with common logic and data
+
+#### Service Locator
+![game-programming](./assets/patterns/game-programming.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Encapsulate the processes involved in obtaining a service with a strong abstraction layer.
+
+##### Class Diagram
+![service-locator-pattern-uml-class-diagram](./assets/patterns/service-locator-pattern-uml-class-diagram.png)
+
+##### Applicability
+The service locator pattern is applicable whenever we want to locate/fetch various services using JNDI which, typically, is a redundant and expensive lookup. The service Locator pattern addresses this expensive lookup by making use of caching techniques ie. for the very first time a particular service is requested, the service Locator looks up in JNDI, fetched the relevant service and then finally caches this service object. Now, further lookups of the same service via Service Locator is done in its cache which improves the performance of application to great extent.
+
+##### Typical Use Case
+* When network hits are expensive and time consuming
+* Lookups of services are done quite frequently
+* Large number of services are being used
+
+##### Consequences
+* Violates Interface Segregation Principle (ISP) by providing pattern consumers with an access to a number of services that they don't potentially need.
+* Creates hidden dependencies that can break the clients at runtime.
+
+#### Unit Of Work
+![data-access](./assets/patterns/data-access.PNG) ![performance](./assets/patterns/performance.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+When a business transaction is completed, all the the updates are sent as one big unit of work to be persisted in one go to minimize database round-trips.
+
+##### Explanation
+Real world example
+
+> We have a database containing student information. Administrators all over the country are constantly updating this information and it causes high load on the database server. To make the load more manageable we apply to Unit of Work pattern to send many small updates in batches.
+>
+
+In plain words
+
+> Unit of Work merges many small database updates in single batch to optimize the number of round-trips.
+>
+
+MartinFowler.com says
+
+> Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems.
+>
+
+**Programmatic Example**
+Here's the `Student` entity that is being persisted to the database.
+
+```java
+public class Student {
+  private final Integer id;
+  private final String name;
+  private final String address;
+
+  public Student(Integer id, String name, String address) {
+    this.id = id;
+    this.name = name;
+    this.address = address;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+}
+```
+
+The essence of the implementation is the `StudentRepository` implementing the Unit of Work pattern. It maintains a map of database operations (`context`) that need to be done and when `commit` is called it applies them in single batch.
+
+```java
+public interface IUnitOfWork<T> {
+    
+  String INSERT = "INSERT";
+  String DELETE = "DELETE";
+  String MODIFY = "MODIFY";
+
+  void registerNew(T entity);
+
+  void registerModified(T entity);
+
+  void registerDeleted(T entity);
+
+  void commit();
+}
+
+@Slf4j
+public class StudentRepository implements IUnitOfWork<Student> {
+
+  private final Map<String, List<Student>> context;
+  private final StudentDatabase studentDatabase;
+
+  public StudentRepository(Map<String, List<Student>> context, StudentDatabase studentDatabase) {
+    this.context = context;
+    this.studentDatabase = studentDatabase;
+  }
+
+  @Override
+  public void registerNew(Student student) {
+    LOGGER.info("Registering {} for insert in context.", student.getName());
+    register(student, IUnitOfWork.INSERT);
+  }
+
+  @Override
+  public void registerModified(Student student) {
+    LOGGER.info("Registering {} for modify in context.", student.getName());
+    register(student, IUnitOfWork.MODIFY);
+
+  }
+
+  @Override
+  public void registerDeleted(Student student) {
+    LOGGER.info("Registering {} for delete in context.", student.getName());
+    register(student, IUnitOfWork.DELETE);
+  }
+
+  private void register(Student student, String operation) {
+    var studentsToOperate = context.get(operation);
+    if (studentsToOperate == null) {
+      studentsToOperate = new ArrayList<>();
+    }
+    studentsToOperate.add(student);
+    context.put(operation, studentsToOperate);
+  }
+
+  @Override
+  public void commit() {
+    if (context == null || context.size() == 0) {
+      return;
+    }
+    LOGGER.info("Commit started");
+    if (context.containsKey(IUnitOfWork.INSERT)) {
+      commitInsert();
+    }
+
+    if (context.containsKey(IUnitOfWork.MODIFY)) {
+      commitModify();
+    }
+    if (context.containsKey(IUnitOfWork.DELETE)) {
+      commitDelete();
+    }
+    LOGGER.info("Commit finished.");
+  }
+
+  private void commitInsert() {
+    var studentsToBeInserted = context.get(IUnitOfWork.INSERT);
+    for (var student : studentsToBeInserted) {
+      LOGGER.info("Saving {} to database.", student.getName());
+      studentDatabase.insert(student);
+    }
+  }
+
+  private void commitModify() {
+    var modifiedStudents = context.get(IUnitOfWork.MODIFY);
+    for (var student : modifiedStudents) {
+      LOGGER.info("Modifying {} to database.", student.getName());
+      studentDatabase.modify(student);
+    }
+  }
+
+  private void commitDelete() {
+    var deletedStudents = context.get(IUnitOfWork.DELETE);
+    for (var student : deletedStudents) {
+      LOGGER.info("Deleting {} to database.", student.getName());
+      studentDatabase.delete(student);
+    }
+  }
+}
+```
+
+Finally, here's how we use the `StudentRepository` and `commit` the transaction.
+
+```java
+    studentRepository.registerNew(ram);
+    studentRepository.registerModified(shyam);
+    studentRepository.registerDeleted(gopi);
+    studentRepository.commit();
+```
+
+##### Class Diagram
+![unit-of-work-pattern-uml-class-diagram](./assets/patterns/unit-of-work-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Unit Of Work pattern when
+
+* To optimize the time taken for database transactions.
+* To send changes to database as a unit of work which ensures atomicity of the transaction.
+* To reduce number of database calls.
+
+##### Tutorials
+* [Repository and Unit of Work Pattern](https://www.programmingwithwolfgang.com/repository-and-unit-of-work-pattern/)
+* [Unit of Work - a Design Pattern](https://mono.software/2017/01/13/unit-of-work-a-design-pattern/)
