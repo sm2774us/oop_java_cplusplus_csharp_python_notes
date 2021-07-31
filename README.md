@@ -3376,3 +3376,6 @@ Use the Unit Of Work pattern when
 > An **_integration pattern_** is concerned with how software applications communicate and exchange data.
 >
 
+# References
+
+* [Java Design Patterns](https://java-design-patterns.com/patterns/)
