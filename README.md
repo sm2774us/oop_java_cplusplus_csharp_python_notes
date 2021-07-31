@@ -1291,6 +1291,198 @@ Use the Prototype pattern when a system should be independent of how its product
 ##### Known uses
   * [java.lang.Object#clone()](http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#clone%28%29)
 
+#### Registry
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Stores the objects of a single class and provide a global point of access to them. Similar to Multiton pattern, only difference is that in a registry there is no restriction on the number of objects.
+
+##### Explanation
+In Plain Words
+
+> Registry is a well-known object that other objects can use to find common objects and services.
+>
+
+**Programmatic Example**
+
+Below is a `Customer` Class
+
+```java
+ublic class Customer {
+
+  private final String id;
+  private final String name;
+
+  public Customer(String id, String name) {
+    this.id = id;
+    this.name = name;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+}
+```
+
+The registry of the `Customer` objects is `CustomerRegistry`.
+
+```java
+public final class CustomerRegistry {
+
+    private static final CustomerRegistry instance = new CustomerRegistry();
+
+    public static CustomerRegistry getInstance() { return instance; }
+
+    private final Map<String, Customer> customerMap;
+
+    private CustomerRegistry() { customerMap = new ConcurrentHashMap<>(); }
+
+    public Customer addCustomer(Customer customer) { return customerMap.put(customer.getId(), customer); }
+
+    public Customer getCustomer(String id) { return customerMap.get(id); }
+
+} 
+```
+
+##### Class Diagram
+![registry-pattern-uml-class-diagram](./assets/patterns/registry-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use Registry pattern when
+
+  * client wants reference of some object, so client can lookup for that object in the object's registry.
+
+##### Consequences
+Large number of bulky objects added to registry would result in a lot of memory consumption as objects in the registry are not garbage collected.
+
+#### Singleton
+![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Ensure a class only has one instance, and provide a global point of access to it.
+
+##### Explanation
+Real-world example
+
+> There can only be one ivory tower where the wizards study their magic. The same enchanted ivory tower is always used by the wizards. The ivory tower here is a singleton.
+>
+
+In plain words
+
+> Ensures that only one object of a particular class is ever created.
+>
+
+Wikipedia says
+
+> In software engineering, the singleton pattern is a software design pattern that restricts the instantiation of a class to one object. This is useful when exactly one object is needed to coordinate actions across the system.
+>
+
+**Programmatic Example**
+
+Joshua Bloch, Effective Java 2nd Edition p.18
+
+> A single-element enum type is the best way to implement a singleton
+>
+
+```java
+public enum EnumIvoryTower {
+  INSTANCE
+}
+```
+Then in order to use:
+
+```java
+    var enumIvoryTower1 = EnumIvoryTower.INSTANCE;
+    var enumIvoryTower2 = EnumIvoryTower.INSTANCE;
+    LOGGER.info("enumIvoryTower1={}", enumIvoryTower1);
+    LOGGER.info("enumIvoryTower2={}", enumIvoryTower2);
+```
+
+The console output
+
+```java
+enumIvoryTower1=com.iluwatar.singleton.EnumIvoryTower@1221555852
+enumIvoryTower2=com.iluwatar.singleton.EnumIvoryTower@1221555852
+```
+
+##### Class Diagram
+![singleton-pattern-uml-class-diagram](./assets/patterns/singleton-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Singleton pattern when
+
+  * There must be exactly one instance of a class, and it must be accessible to clients from a well-known access point
+  * When the sole instance should be extensible by subclassing, and clients should be able to use an extended instance without modifying their code
+
+Some typical use cases for the Singleton
+
+  * The logging class
+  * Managing a connection to a database
+  * File manager
+
+##### Known uses
+  * [java.lang.Runtime#getRuntime()](http://docs.oracle.com/javase/8/docs/api/java/lang/Runtime.html#getRuntime%28%29)
+  * [java.awt.Desktop#getDesktop()](http://docs.oracle.com/javase/8/docs/api/java/awt/Desktop.html#getDesktop--)
+  * [java.lang.System#getSecurityManager()](http://docs.oracle.com/javase/8/docs/api/java/lang/System.html#getSecurityManager--)
+
+##### Consequences
+  * Violates Single Responsibility Principle (SRP) by controlling their creation and lifecycle.
+  * Encourages using a globally shared instance which prevents an object and resources used by this object from being deallocated.
+  * Creates tightly coupled code. The clients of the Singleton become difficult to test.
+  * Makes it almost impossible to subclass a Singleton.
+
+#### Step Builder
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+An extension of the Builder pattern that fully guides the user through the creation of the object with no chances of confusion. The user experience will be much more improved by the fact that he will only see the next step methods available, NO build method until is the right time to build the object.
+
+##### Class Diagram
+![step-builder-pattern-uml-class-diagram](./assets/patterns/step-builder-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Step Builder pattern when the algorithm for creating a complex object should be independent of the parts that make up the object and how they're assembled the construction process must allow different representations for the object that's constructed when in the process of constructing the order is important.
+
+#### Value Object
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Provide objects which follow value semantics rather than reference semantics. This means value objects' equality are not based on identity. Two value objects are equal when they have the same value, not necessarily being the same object.
+
+##### Class Diagram
+![value-object-pattern-uml-class-diagram](./assets/patterns/value-object-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Value Object when
+
+  * You need to measure the objects' equality based on the objects' value
+
+##### Real world examples
+  * [java.util.Optional](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html)
+  * [java.time.LocalDate](https://docs.oracle.com/javase/8/docs/api/java/time/LocalDate.html)
+  * [joda-time, money, beans](http://www.joda.org/)
+
+### **Structural Pattern**
+> A **_structural pattern_** is concerned with how classes and objects are composed to form larger structures.
+>
+
+### **Behavioral Pattern**
+> A **_behavioral pattern_** is concerned with algorithms and the assignment of responsibilites between objects.
+>
+
+### **Concurrency Pattern**
+> A  **_concurrency pattern_** is a type of design patterns that deals with the multi-threaded programming paradigm.
+>
+
+### **Presentation Tier Pattern**
+> A **_presentation tier pattern** is the top-most level of the application, this is concerned with translating tasks and results to something the user can understand.
+>
+
 ### **Architectural Pattern**
 > An **_architectural pattern_** is a general, reusable solution to a commonly occurring problem in software architecture within a given context. Architectural patterns are similar to software design pattern but have a broader scope.
 >
@@ -3145,3 +3337,8 @@ Use the Unit Of Work pattern when
 ##### Tutorials
 * [Repository and Unit of Work Pattern](https://www.programmingwithwolfgang.com/repository-and-unit-of-work-pattern/)
 * [Unit of Work - a Design Pattern](https://mono.software/2017/01/13/unit-of-work-a-design-pattern/)
+
+### **Integration Pattern**
+> An **_integration pattern_** is concerned with how software applications communicate and exchange data.
+>
+
