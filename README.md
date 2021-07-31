@@ -1471,17 +1471,51 @@ Use the Value Object when
 > A **_structural pattern_** is concerned with how classes and objects are composed to form larger structures.
 >
 
+| Pattern | Categories |
+| :-- | :-- |
+| [Abstract Document](#abstract-document) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Adapter](#adapter) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![structural](./assets/patterns/structural.PNG) |\
+| [Ambassador](#ambassador) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![decoupling](./assets/patterns/decoupling.PNG)  ![structural](./assets/patterns/structural.PNG) |
+| [Bridge](#bridge) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Business Delegate](#business-delegate) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Composite](#composite) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Composite Entity](#composite-entity) | ![enterprise-integration-pattern](./assets/patterns/enterprise-integration-pattern.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Decorator](#decorator) | ![extensibility](./assets/patterns/extensibility.PNG) ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Delegation](#delegation) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Event Aggregator](#event-aggregator) | ![reactive](./assets/reactive.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Facade](#facade) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Flux](#flux) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Flyweight](#flyweight) | ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![peformance](./assets/patterns/peformance.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Font Controller](#font-controller) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Marker Interface](#marker-interface) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Module](#module) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Page Object](#page-object) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Proxy](#proxy) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Role Object](#role-object) | ![extensibility](./assets/patterns/extensibility.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Separated Interface](#separated-interface) | ![decoupling](./assets/patterns/decoupling.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Strangler](#strangler) | ![cloud-distributed](./assets/patterns/cloud-distributed.PNG) ![extensibility](./assets/patterns/extensibility.PNG) ![structural](./assets/patterns/structural.PNG) |
+| [Twin](#twin) | ![extensibility](./assets/patterns/extensibility.PNG) ![structural](./assets/patterns/structural.PNG) |
+
 ### **Behavioral Pattern**
 > A **_behavioral pattern_** is concerned with algorithms and the assignment of responsibilites between objects.
 >
+
+| Pattern | Categories |
+| :-- | :-- |
 
 ### **Concurrency Pattern**
 > A  **_concurrency pattern_** is a type of design patterns that deals with the multi-threaded programming paradigm.
 >
 
+| Pattern | Categories |
+| :-- | :-- |
+
 ### **Presentation Tier Pattern**
 > A **_presentation tier pattern** is the top-most level of the application, this is concerned with translating tasks and results to something the user can understand.
 >
+
+| Pattern | Categories |
+| :-- | :-- |
 
 ### **Architectural Pattern**
 > An **_architectural pattern_** is a general, reusable solution to a commonly occurring problem in software architecture within a given context. Architectural patterns are similar to software design pattern but have a broader scope.
