@@ -119,12 +119,6 @@ Reusing design patterns helps to prevent subtle issues that can cause major prob
 #### Abstract Factory
 ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
 ---
-##### Intent
-Aggregate calls to microservices in a single location, the API Gateway. The user makes a single call to the API Gateway, and the API Gateway then calls each relevant microservice.
-
-##### Explanation
-
-
 ##### Also known as
 Kit
 
@@ -322,6 +316,980 @@ Example use cases
 ##### Related patterns
   * [Factory Method](#factory-method)
   * [Factory Kit](#factory-kit)
+
+#### Builder
+![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Separate the construction of a complex object from its representation so that the same construction process can create different representations.
+
+##### Explanation
+Real-world example
+
+> Imagine a character generator for a role-playing game. The easiest option is to let the computer create the character for you. If you want to manually select the character details like profession, gender, hair color, etc. the character generation becomes a step-by-step process that completes when all the selections are ready.
+>
+
+In plain words
+
+> Allows you to create different flavors of an object while avoiding constructor pollution. Useful when there could be several flavors of an object. Or when there are a lot of steps involved in creation of an object.
+>
+
+Wikipedia says
+
+> The builder pattern is an object creation software design pattern with the intentions of finding a solution to the telescoping constructor anti-pattern.
+>
+
+Having said that let me add a bit about what telescoping constructor anti-pattern is. At one point or the other, we have all seen a constructor like below:
+
+```java
+public Hero(Profession profession, String name, HairType hairType, HairColor hairColor, Armor armor, Weapon weapon) {
+}
+```
+
+As you can see the number of constructor parameters can quickly get out of hand, and it may become difficult to understand the arrangement of parameters. Plus this parameter list could keep on growing if you would want to add more options in the future. This is called **telescoping constructor anti-pattern**.
+
+**Programmatic Example**
+
+The sane alternative is to use the Builder pattern. First of all, we have our hero that we want to create:
+
+```java
+public final class Hero {
+  private final Profession profession;
+  private final String name;
+  private final HairType hairType;
+  private final HairColor hairColor;
+  private final Armor armor;
+  private final Weapon weapon;
+
+  private Hero(Builder builder) {
+    this.profession = builder.profession;
+    this.name = builder.name;
+    this.hairColor = builder.hairColor;
+    this.hairType = builder.hairType;
+    this.weapon = builder.weapon;
+    this.armor = builder.armor;
+  }
+}
+```
+
+Then we have the builder:
+
+```java
+  public static class Builder {
+    private final Profession profession;
+    private final String name;
+    private HairType hairType;
+    private HairColor hairColor;
+    private Armor armor;
+    private Weapon weapon;
+
+    public Builder(Profession profession, String name) {
+      if (profession == null || name == null) {
+        throw new IllegalArgumentException("profession and name can not be null");
+      }
+      this.profession = profession;
+      this.name = name;
+    }
+
+    public Builder withHairType(HairType hairType) {
+      this.hairType = hairType;
+      return this;
+    }
+
+    public Builder withHairColor(HairColor hairColor) {
+      this.hairColor = hairColor;
+      return this;
+    }
+
+    public Builder withArmor(Armor armor) {
+      this.armor = armor;
+      return this;
+    }
+
+    public Builder withWeapon(Weapon weapon) {
+      this.weapon = weapon;
+      return this;
+    }
+
+    public Hero build() {
+      return new Hero(this);
+    }
+  }
+```
+
+Then it can be used as:
+
+```java
+var mage = new Hero.Builder(Profession.MAGE, "Riobard").withHairColor(HairColor.BLACK).withWeapon(Weapon.DAGGER).build();
+```
+
+##### Class Diagram
+![builder-pattern-uml-class-diagram](./assets/patterns/builder-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Builder pattern when
+
+  * The algorithm for creating a complex object should be independent of the parts that make up the object and how they're assembled
+  * The construction process must allow different representations for the object that's constructed
+
+##### Known uses
+  * [java.lang.StringBuilder](http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html)
+  * [java.nio.ByteBuffer](http://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html#put-byte-) as well as similar buffers such as FloatBuffer, IntBuffer and so on.
+  * [java.lang.StringBuffer](http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuffer.html#append-boolean-)
+  * All implementations of [java.lang.Appendable](http://docs.oracle.com/javase/8/docs/api/java/lang/Appendable.html)
+  * [Apache Camel builders](https://github.com/apache/camel/tree/0e195428ee04531be27a0b659005e3aa8d159d23/camel-core/src/main/java/org/apache/camel/builder)
+  * [Apache Commons Option.Builder](https://commons.apache.org/proper/commons-cli/apidocs/org/apache/commons/cli/Option.Builder.html)
+
+#### Coverter
+![decoupling](./assets/patterns/decoupling.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+The purpose of the Converter pattern is to provide a generic, common way of bidirectional conversion between corresponding types, allowing a clean implementation in which the types do not need to be aware of each other. Moreover, the Converter pattern introduces bidirectional collection mapping, reducing a boilerplate code to minimum.
+
+##### Explanation
+Real world example
+
+> In real world applications it is often the case that database layer consists of entities that need to be mapped into DTOs for use on the business logic layer. Similar mapping is done for potentially huge amount of classes and we need a generic way to achieve this.
+>
+
+In plain words
+
+> Converter pattern makes it easy to map instances of one class into instances of another class.
+>
+
+**Programmatic Example**
+
+We need a generic solution for the mapping problem. To achieve this, let's introduce a generic converter.
+
+```java
+public class Converter<T, U> {
+
+  private final Function<T, U> fromDto;
+  private final Function<U, T> fromEntity;
+
+  public Converter(final Function<T, U> fromDto, final Function<U, T> fromEntity) {
+    this.fromDto = fromDto;
+    this.fromEntity = fromEntity;
+  }
+
+  public final U convertFromDto(final T dto) {
+    return fromDto.apply(dto);
+  }
+
+  public final T convertFromEntity(final U entity) {
+    return fromEntity.apply(entity);
+  }
+
+  public final List<U> createFromDtos(final Collection<T> dtos) {
+    return dtos.stream().map(this::convertFromDto).collect(Collectors.toList());
+  }
+
+  public final List<T> createFromEntities(final Collection<U> entities) {
+    return entities.stream().map(this::convertFromEntity).collect(Collectors.toList());
+  }
+}
+```
+
+The specialized converters inherit from this base class as follows.
+
+```java
+public class UserConverter extends Converter<UserDto, User> {
+
+  public UserConverter() {
+    super(UserConverter::convertToEntity, UserConverter::convertToDto);
+  }
+
+  private static UserDto convertToDto(User user) {
+    return new UserDto(user.getFirstName(), user.getLastName(), user.isActive(), user.getUserId());
+  }
+
+  private static User convertToEntity(UserDto dto) {
+    return new User(dto.getFirstName(), dto.getLastName(), dto.isActive(), dto.getEmail());
+  }
+
+}
+```
+
+Now mapping between `User` and `UserDto` becomes trivial.
+
+```java
+var userConverter = new UserConverter();
+var dtoUser = new UserDto("John", "Doe", true, "whatever[at]wherever.com");
+var user = userConverter.convertFromDto(dtoUser);
+```
+
+##### Class Diagram
+![converter-pattern-uml-class-diagram](./assets/patterns/converter-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Converter Pattern in the following situations:
+
+  * When you have types that logically correspond with each other and you need to convert entities between them.
+  * When you want to provide different ways of types conversions depending on the context.
+  * Whenever you introduce a DTO (Data transfer object), you will probably need to convert it into the domain equivalence.
+
+#### Dependency Injection
+![decoupling](./assets/patterns/decoupling.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Dependency Injection is a software design pattern in which one or more dependencies (or services) are injected, or passed by reference, into a dependent object (or client) and are made part of the client's state. The pattern separates the creation of a client's dependencies from its own behavior, which allows program designs to be loosely coupled and to follow the inversion of control and single responsibility principles.
+
+##### Explanation
+Real world example
+
+> The old wizard likes to fill his pipe and smoke tobacco once in a while. However, he doesn't want to depend on a single tobacco brand only but likes to be able to enjoy them all interchangeably.
+>
+
+In plain words
+
+> Dependency Injection separates creation of client's dependencies from its own behavior.
+>
+
+Wikipedia says
+
+> In software engineering, dependency injection is a technique in which an object receives other objects that it depends on. These other objects are called dependencies.
+>
+
+**Programmatic Example**
+
+Let's first introduce the `Tobacco` interface and the concrete brands.
+
+```java
+@Slf4j
+public abstract class Tobacco {
+
+  public void smoke(Wizard wizard) {
+    LOGGER.info("{} smoking {}", wizard.getClass().getSimpleName(),
+        this.getClass().getSimpleName());
+  }
+}
+
+public class SecondBreakfastTobacco extends Tobacco {
+}
+
+public class RivendellTobacco extends Tobacco {
+}
+
+public class OldTobyTobacco extends Tobacco {
+}
+```
+
+Next here's the `Wizard` class hierarchy.
+
+```java
+public interface Wizard {
+
+  void smoke();
+}
+
+public class AdvancedWizard implements Wizard {
+
+  private final Tobacco tobacco;
+
+  public AdvancedWizard(Tobacco tobacco) {
+    this.tobacco = tobacco;
+  }
+
+  @Override
+  public void smoke() {
+    tobacco.smoke(this);
+  }
+}
+```
+
+And lastly we can show how easy it is to give the old wizard any brand of tobacco.
+
+```java
+    var advancedWizard = new AdvancedWizard(new SecondBreakfastTobacco());
+    advancedWizard.smoke();
+```
+
+##### Class Diagram
+![dependency-injection-pattern-uml-class-diagram](./assets/patterns/dependency-injection-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Dependency Injection pattern when:
+
+  * When you need to remove knowledge of concrete implementation from object.
+  * To enable unit testing of classes in isolation using mock objects or stubs.
+
+#### Factory
+![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Also known as
+  * Simple Factory
+  * Static Factory Method
+
+##### Intent
+Providing a static method encapsulated in a class called the factory, to hide the implementation logic and make client code focus on usage rather than initializing new objects.
+
+##### Explanation
+Real-world example
+
+> Imagine an alchemist who is about to manufacture coins. The alchemist must be able to create both gold and copper coins and switching between them must be possible without modifying the existing source code. The factory pattern makes it possible by providing a static construction method which can be called with relevant parameters.
+>
+
+Wikipedia says
+
+> Factory is an object for creating other objects – formally a factory is a function or method that returns objects of a varying prototype or class.
+>
+
+**Programmatic Example**
+
+We have an interface `Coin` and two implementations `GoldCoin` and `CopperCoin`.
+
+```java
+public interface Coin {
+  String getDescription();
+}
+
+public class GoldCoin implements Coin {
+
+  static final String DESCRIPTION = "This is a gold coin.";
+
+  @Override
+  public String getDescription() {
+    return DESCRIPTION;
+  }
+}
+
+public class CopperCoin implements Coin {
+   
+  static final String DESCRIPTION = "This is a copper coin.";
+
+  @Override
+  public String getDescription() {
+    return DESCRIPTION;
+  }
+}
+```
+
+Enumeration above represents types of coins that we support (`GoldCoin` and `CopperCoin`).
+
+```java
+@RequiredArgsConstructor
+@Getter
+public enum CoinType {
+
+  COPPER(CopperCoin::new),
+  GOLD(GoldCoin::new);
+
+  private final Supplier<Coin> constructor;
+}
+```
+
+Then we have the static method `getCoin` to create coin objects encapsulated in the factory class `CoinFactory`.
+```java
+public class CoinFactory {
+
+  public static Coin getCoin(CoinType type) {
+    return type.getConstructor().get();
+  }
+}
+```
+
+Now on the client code we can create different types of coins using the factory class.
+
+```java
+LOGGER.info("The alchemist begins his work.");
+var coin1 = CoinFactory.getCoin(CoinType.COPPER);
+var coin2 = CoinFactory.getCoin(CoinType.GOLD);
+LOGGER.info(coin1.getDescription());
+LOGGER.info(coin2.getDescription());
+```
+Program output:
+```
+The alchemist begins his work.
+This is a copper coin.
+This is a gold coin.
+```
+
+##### Class Diagram
+![factory-pattern-uml-class-diagram](./assets/patterns/factory-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the factory pattern when you only care about the creation of a object, not how to create and manage it.
+
+Pros
+  * Allows keeping all objects creation in one place and avoid of spreading 'new' keyword across codebase.
+  * Allows to write loosely coupled code. Some of its main advantages include better testability, easy-to-understand code, swappable components, scalability and isolated features.
+
+Cons
+  * The code becomes more complicated than it should be.
+
+##### Known uses
+  * [java.util.Calendar#getInstance()](https://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html#getInstance--)
+  * [java.util.ResourceBundle#getBundle()](https://docs.oracle.com/javase/8/docs/api/java/util/ResourceBundle.html#getBundle-java.lang.String-)
+  * [java.text.NumberFormat#getInstance()](https://docs.oracle.com/javase/8/docs/api/java/text/NumberFormat.html#getInstance--)
+  * [java.nio.charset.Charset#forName()](https://docs.oracle.com/javase/8/docs/api/java/nio/charset/Charset.html#forName-java.lang.String-)
+  * [java.net.URLStreamHandlerFactory#createURLStreamHandler(String)](https://docs.oracle.com/javase/8/docs/api/java/net/URLStreamHandlerFactory.html) (returns different singleton objects, depending on a protocol)
+  * [java.util.EnumSet#of](https://docs.oracle.com/javase/8/docs/api/java/util/EnumSet.html#of(E))
+  * [javax.xml.bind.JAXBContext#createMarshaller()](https://docs.oracle.com/javase/8/docs/api/javax/xml/bind/JAXBContext.html#createMarshaller--) and other similar methods.
+
+##### Related patterns
+  * [Factory Method](#factory-method)
+  * [Factory Kit](#factory-kit)
+  * [Abstract Factory](#abstract-factory)
+
+#### Factory Kit
+![extensibility](./assets/patterns/extensibility.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Define a factory of immutable content with separated builder and factory interfaces.
+
+##### Class Diagram
+![factory-kit-pattern-uml-class-diagram](./assets/patterns/factory-kit-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Factory Kit pattern when
+  * a class can't anticipate the class of objects it must create
+  * you just want a new instance of a custom builder instead of the global one
+  * you explicitly want to define types of objects, that factory can build
+  * you want a separated builder and creator interface
+
+#### Factory Method
+![extensibility](./assets/patterns/extensibility.PNG) ![gang-of-four](./assets/patterns/gang-of-four.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Also known as
+Virtual Constructor
+
+##### Intent
+Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.
+
+##### Explanation
+Real-world example
+
+> Blacksmith manufactures weapons. Elves require Elvish weapons and orcs require Orcish weapons. Depending on the customer at hand the right type of blacksmith is summoned.
+>
+
+In plain words
+
+> It provides a way to delegate the instantiation logic to child classes.
+>
+
+Wikipedia says
+
+> In class-based programming, the factory method pattern is a creational pattern that uses factory methods to deal with the problem of creating objects without having to specify the exact class of the object that will be created. This is done by creating objects by calling a factory method — either specified in an interface and implemented by child classes, or implemented in a base class and optionally overridden by derived classes—rather than by calling a constructor.
+>
+
+**Programmatic Example**
+
+Taking our blacksmith example above. First of all, we have a Blacksmith interface and some implementations for it:
+
+```java
+public interface Blacksmith {
+  Weapon manufactureWeapon(WeaponType weaponType);
+}
+
+public class ElfBlacksmith implements Blacksmith {
+  public Weapon manufactureWeapon(WeaponType weaponType) {
+    return ELFARSENAL.get(weaponType);
+  }
+}
+
+public class OrcBlacksmith implements Blacksmith {
+  public Weapon manufactureWeapon(WeaponType weaponType) {
+    return ORCARSENAL.get(weaponType);
+  }
+}
+```
+
+When the customers come, the correct type of blacksmith is summoned and requested weapons are manufactured:
+
+```java
+Blacksmith blacksmith = new OrcBlacksmith();
+Weapon weapon = blacksmith.manufactureWeapon(WeaponType.SPEAR);
+LOGGER.info("{} manufactured {}", blacksmith, weapon);
+weapon = blacksmith.manufactureWeapon(WeaponType.AXE);
+LOGGER.info("{} manufactured {}", blacksmith, weapon);
+
+blacksmith = new ElfBlacksmith();
+weapon = blacksmith.manufactureWeapon(WeaponType.SPEAR);
+LOGGER.info("{} manufactured {}", blacksmith, weapon);
+weapon = blacksmith.manufactureWeapon(WeaponType.AXE);
+LOGGER.info("{} manufactured {}", blacksmith, weapon);
+```
+
+Program output:
+
+```
+The orc blacksmith manufactured an orcish spear
+The orc blacksmith manufactured an orcish axe
+The elf blacksmith manufactured an elven spear
+The elf blacksmith manufactured an elven axe
+```
+
+##### Class Diagram
+![factory-method-pattern-uml-class-diagram](./assets/patterns/factory-method-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Factory Method pattern when:
+  * Class cannot anticipate the class of objects it must create.
+  * Class wants its subclasses to specify the objects it creates.
+  * Classes delegate responsibility to one of several helper subclasses, and you want to localize the knowledge of which helper subclass is the delegate.
+
+##### Known uses
+  * [java.util.Calendar](http://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html#getInstance--)
+  * [java.util.ResourceBundle](http://docs.oracle.com/javase/8/docs/api/java/util/ResourceBundle.html#getBundle-java.lang.String-)
+  * [java.text.NumberFormat](http://docs.oracle.com/javase/8/docs/api/java/text/NumberFormat.html#getInstance--)
+  * [java.nio.charset.Charset](http://docs.oracle.com/javase/8/docs/api/java/nio/charset/Charset.html#forName-java.lang.String-)
+  * [java.net.URLStreamHandlerFactory](http://docs.oracle.com/javase/8/docs/api/java/net/URLStreamHandlerFactory.html#createURLStreamHandler-java.lang.String-)
+  * [java.util.EnumSet](https://docs.oracle.com/javase/8/docs/api/java/util/EnumSet.html#of-E-)
+  * [javax.xml.bind.JAXBContext](https://docs.oracle.com/javase/8/docs/api/javax/xml/bind/JAXBContext.html#createMarshaller--)
+
+#### Mono State
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Also known as
+Borg
+
+##### Intent
+Enforces a behaviour like sharing the same state amongst all instances.
+
+##### Class Diagram
+![monostate-pattern-uml-class-diagram](./assets/patterns/monostate-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Monostate pattern when
+
+  * The same state must be shared across all instances of a class.
+  * Typically this pattern might be used everywhere a Singleton might be used. Singleton usage however is not transparent, Monostate usage is.
+  * Monostate has one major advantage over singleton. The subclasses might decorate the shared state as they wish and hence can provide dynamically different behaviour than the base class.
+
+##### Typical Use Case
+* The logging class
+* Managing a connection to a database
+* File manager
+
+#### Multiton
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Also known as
+Registry
+
+##### Intent
+Ensure a class only has limited number of instances and provide a global point of access to them.
+
+##### Explanation
+Real world example
+
+> The Nazgûl, also called ringwraiths or the Nine Riders, are Sauron's most terrible servants. By definition there's always nine of them.
+>
+
+In plain words
+
+> Multiton pattern ensures there's predefined amount of instances available globally.
+>
+
+Wikipedia says
+
+> In software engineering, the multiton pattern is a design pattern which generalizes the singleton pattern. Whereas the singleton allows only one instance of a class to be created, the multiton pattern allows for the controlled creation of multiple instances, which it manages through the use of a map.
+>
+
+**Programmatic Example**
+
+`Nazgul` is the multiton class.
+
+```java
+public enum NazgulName {
+
+  KHAMUL, MURAZOR, DWAR, JI_INDUR, AKHORAHIL, HOARMURATH, ADUNAPHEL, REN, UVATHA
+}
+
+public final class Nazgul {
+
+  private static final Map<NazgulName, Nazgul> nazguls;
+
+  private final NazgulName name;
+
+  static {
+    nazguls = new ConcurrentHashMap<>();
+    nazguls.put(NazgulName.KHAMUL, new Nazgul(NazgulName.KHAMUL));
+    nazguls.put(NazgulName.MURAZOR, new Nazgul(NazgulName.MURAZOR));
+    nazguls.put(NazgulName.DWAR, new Nazgul(NazgulName.DWAR));
+    nazguls.put(NazgulName.JI_INDUR, new Nazgul(NazgulName.JI_INDUR));
+    nazguls.put(NazgulName.AKHORAHIL, new Nazgul(NazgulName.AKHORAHIL));
+    nazguls.put(NazgulName.HOARMURATH, new Nazgul(NazgulName.HOARMURATH));
+    nazguls.put(NazgulName.ADUNAPHEL, new Nazgul(NazgulName.ADUNAPHEL));
+    nazguls.put(NazgulName.REN, new Nazgul(NazgulName.REN));
+    nazguls.put(NazgulName.UVATHA, new Nazgul(NazgulName.UVATHA));
+  }
+
+  private Nazgul(NazgulName name) {
+    this.name = name;
+  }
+
+  public static Nazgul getInstance(NazgulName name) {
+    return nazguls.get(name);
+  }
+
+  public NazgulName getName() {
+    return name;
+  }
+}
+```
+
+And here's how we access the Nazgul instances.
+
+```java
+    LOGGER.info("KHAMUL={}", Nazgul.getInstance(NazgulName.KHAMUL));
+    LOGGER.info("MURAZOR={}", Nazgul.getInstance(NazgulName.MURAZOR));
+    LOGGER.info("DWAR={}", Nazgul.getInstance(NazgulName.DWAR));
+    LOGGER.info("JI_INDUR={}", Nazgul.getInstance(NazgulName.JI_INDUR));
+    LOGGER.info("AKHORAHIL={}", Nazgul.getInstance(NazgulName.AKHORAHIL));
+    LOGGER.info("HOARMURATH={}", Nazgul.getInstance(NazgulName.HOARMURATH));
+    LOGGER.info("ADUNAPHEL={}", Nazgul.getInstance(NazgulName.ADUNAPHEL));
+    LOGGER.info("REN={}", Nazgul.getInstance(NazgulName.REN));
+    LOGGER.info("UVATHA={}", Nazgul.getInstance(NazgulName.UVATHA));
+```
+
+Program output:
+
+```
+KHAMUL=com.iluwatar.multiton.Nazgul@2b214b94
+MURAZOR=com.iluwatar.multiton.Nazgul@17814b1c
+DWAR=com.iluwatar.multiton.Nazgul@7ac9af2a
+JI_INDUR=com.iluwatar.multiton.Nazgul@7bb004b8
+AKHORAHIL=com.iluwatar.multiton.Nazgul@78e89bfe
+HOARMURATH=com.iluwatar.multiton.Nazgul@652ce654
+ADUNAPHEL=com.iluwatar.multiton.Nazgul@522ba524
+REN=com.iluwatar.multiton.Nazgul@29c5ee1d
+UVATHA=com.iluwatar.multiton.Nazgul@15cea7b0
+```
+
+##### Class Diagram
+![multiton-pattern-uml-class-diagram](./assets/patterns/multiton-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Multiton pattern when
+  * There must be specific number of instances of a class, and they must be accessible to clients from a well-known access point.
+
+#### Object Mother
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Define a factory of immutable content with separated builder and factory interfaces.
+
+##### Class Diagram
+![object-mother-pattern-uml-class-diagram](./assets/patterns/object-mother-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Object Mother pattern when
+
+  * You want consistent objects over several tests
+  * You want to reduce code for creation of objects in tests
+  * Every test should run with fresh data
+
+#### Object Pool
+![game-programming](./assets/patterns/game-programming.PNG) ![performance](./assets/patterns/performance.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Also known as
+Resource Pool
+
+##### Intent
+When objects are expensive to create and they are needed only for short periods of time it is advantageous to utilize the Object Pool pattern. The Object Pool provides a cache for instantiated objects tracking which ones are in use and which are available.
+
+##### Explanation
+Real world example
+
+> In our war game we need to use oliphaunts, massive and mythic beasts, but the problem is that they are extremely expensive to create. The solution is to create a pool of them, track which ones are in-use, and instead of disposing them re-use the instances.
+>
+
+In plain words
+
+> Object Pool manages a set of instances instead of creating and destroying them on demand.
+>
+
+Wikipedia says
+
+> The object pool pattern is a software creational design pattern that uses a set of initialized objects kept ready to use – a "pool" – rather than allocating and destroying them on demand.
+>
+
+**Programmatic Example**
+
+Here's the basic `Oliphaunt` class. These giants are very expensive to create.
+
+```java
+public class Oliphaunt {
+
+  private static final AtomicInteger counter = new AtomicInteger(0);
+
+  private final int id;
+
+  public Oliphaunt() {
+    id = counter.incrementAndGet();
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Oliphaunt id=%d", id);
+  }
+}
+```
+
+Next we present the `ObjectPool` and more specifically `OliphauntPool`.
+
+```java
+public abstract class ObjectPool<T> {
+
+  private final Set<T> available = new HashSet<>();
+  private final Set<T> inUse = new HashSet<>();
+
+  protected abstract T create();
+
+  public synchronized T checkOut() {
+    if (available.isEmpty()) {
+      available.add(create());
+    }
+    var instance = available.iterator().next();
+    available.remove(instance);
+    inUse.add(instance);
+    return instance;
+  }
+
+  public synchronized void checkIn(T instance) {
+    inUse.remove(instance);
+    available.add(instance);
+  }
+
+  @Override
+  public synchronized String toString() {
+    return String.format("Pool available=%d inUse=%d", available.size(), inUse.size());
+  }
+}
+
+public class OliphauntPool extends ObjectPool<Oliphaunt> {
+
+  @Override
+  protected Oliphaunt create() {
+    return new Oliphaunt();
+  }
+}
+```
+
+Finally, here's how we utilize the pool.
+
+```java
+    var pool = new OliphauntPool();
+    var oliphaunt1 = pool.checkOut();
+    var oliphaunt2 = pool.checkOut();
+    var oliphaunt3 = pool.checkOut();
+    pool.checkIn(oliphaunt1);
+    pool.checkIn(oliphaunt2);
+    var oliphaunt4 = pool.checkOut();
+    var oliphaunt5 = pool.checkOut();
+```
+
+Program output:
+
+```
+Pool available=0 inUse=0
+Checked out Oliphaunt id=1
+Pool available=0 inUse=1
+Checked out Oliphaunt id=2
+Checked out Oliphaunt id=3
+Pool available=0 inUse=3
+Checking in Oliphaunt id=1
+Checking in Oliphaunt id=2
+Pool available=2 inUse=1
+Checked out Oliphaunt id=2
+Checked out Oliphaunt id=1
+Pool available=0 inUse=3
+```
+
+##### Class Diagram
+![object-pool-pattern-uml-class-diagram](./assets/patterns/object-pool-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Object Pool pattern when
+
+  * The objects are expensive to create (allocation cost).
+  * You need a large number of short-lived objects (memory fragmentation).
+
+#### Property
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Create hierarchy of objects and new objects using already existing objects as parents.
+
+##### Class Diagram
+![property-pattern-uml-class-diagram](./assets/patterns/property-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Property pattern when
+
+  * When you like to have objects with dynamic set of fields and prototype inheritance
+
+##### Real world examples
+  * [JavaScript prototype inheritance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain)
+
+#### Prototype
+![instantiation](./assets/patterns/instantiation.PNG) ![creational](./assets/patterns/creational.PNG)
+---
+##### Intent
+Specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype.
+
+##### Explanation
+First, it should be noted that the Prototype pattern is not used to gain performance benefits. It's only used for creating new objects from prototype instances.
+
+Real-world example
+
+> Remember Dolly? The sheep that was cloned! Lets not get into the details but the key point here is that it is all about cloning.
+>
+
+In plain words
+
+> Create an object based on an existing object through cloning.
+>
+
+Wikipedia says
+
+> The prototype pattern is a creational design pattern in software development. It is used when the type of objects to create is determined by a prototypical instance, which is cloned to produce new objects.
+>
+
+In short, it allows you to create a copy of an existing object and modify it to your needs, instead of going through the trouble of creating an object from scratch and setting it up.
+
+**Programmatic Example**
+
+In Java, the prototype pattern is recommended to be implemented as follows. First, create an interface with a method for cloning objects. In this example, `Prototype` interface accomplishes this with its `copy` method.
+
+```java
+public interface Prototype {
+  Object copy();
+}
+```
+
+Our example contains a hierarchy of different creatures. For example, let's look at `Beast` and `OrcBeast` classes.
+
+```java
+@EqualsAndHashCode
+@NoArgsConstructor
+public abstract class Beast implements Prototype {
+
+  public Beast(Beast source) {
+  }
+
+  @Override
+  public abstract Beast copy();
+}
+
+@EqualsAndHashCode(callSuper = false)
+@RequiredArgsConstructor
+public class OrcBeast extends Beast {
+
+  private final String weapon;
+
+  public OrcBeast(OrcBeast orcBeast) {
+    super(orcBeast);
+    this.weapon = orcBeast.weapon;
+  }
+
+  @Override
+  public OrcBeast copy() {
+    return new OrcBeast(this);
+  }
+
+  @Override
+  public String toString() {
+    return "Orcish wolf attacks with " + weapon;
+  }
+}
+```
+
+We don't want to go into too much details, but the full example contains also base classes `Mage` and `Warlord` and there are specialized implementations for those for elves in addition to orcs.
+
+To take full advantage of the prototype pattern, we create `HeroFactory` and `HeroFactoryImpl` classes to produce different kinds of creatures from prototypes.
+
+```java
+public interface HeroFactory {
+  
+  Mage createMage();
+  Warlord createWarlord();
+  Beast createBeast();
+}
+
+@RequiredArgsConstructor
+public class HeroFactoryImpl implements HeroFactory {
+
+  private final Mage mage;
+  private final Warlord warlord;
+  private final Beast beast;
+
+  public Mage createMage() {
+    return mage.copy();
+  }
+
+  public Warlord createWarlord() {
+    return warlord.copy();
+  }
+
+  public Beast createBeast() {
+    return beast.copy();
+  }
+}
+```
+
+Now, we are able to show the full prototype pattern in action producing new creatures by cloning existing instances.
+
+```
+    var factory = new HeroFactoryImpl(
+        new ElfMage("cooking"),
+        new ElfWarlord("cleaning"),
+        new ElfBeast("protecting")
+    );
+    var mage = factory.createMage();
+    var warlord = factory.createWarlord();
+    var beast = factory.createBeast();
+    LOGGER.info(mage.toString());
+    LOGGER.info(warlord.toString());
+    LOGGER.info(beast.toString());
+
+    factory = new HeroFactoryImpl(
+        new OrcMage("axe"),
+        new OrcWarlord("sword"),
+        new OrcBeast("laser")
+    );
+    mage = factory.createMage();
+    warlord = factory.createWarlord();
+    beast = factory.createBeast();
+    LOGGER.info(mage.toString());
+    LOGGER.info(warlord.toString());
+    LOGGER.info(beast.toString());
+```
+
+Here's the console output from running the example.
+
+```
+Elven mage helps in cooking
+Elven warlord helps in cleaning
+Elven eagle helps in protecting
+Orcish mage attacks with axe
+Orcish warlord attacks with sword
+Orcish wolf attacks with laser
+```
+
+##### Class Diagram
+![prototype-pattern-uml-class-diagram](./assets/patterns/prototype-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Prototype pattern when a system should be independent of how its products are created, composed, represented and
+
+  * When the classes to instantiate are specified at run-time, for example, by dynamic loading.
+  * To avoid building a class hierarchy of factories that parallels the class hierarchy of products.
+  * When instances of a class can have one of only a few different combinations of state. It may be more convenient to install a corresponding number of prototypes and clone them rather than instantiating the class manually, each time with the appropriate state.
+  * When object creation is expensive compared to cloning.
+
+##### Known uses
+  * [java.lang.Object#clone()](http://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#clone%28%29)
 
 ### **Architectural Pattern**
 > An **_architectural pattern_** is a general, reusable solution to a commonly occurring problem in software architecture within a given context. Architectural patterns are similar to software design pattern but have a broader scope.
