@@ -61,6 +61,37 @@ abstractions.<br />
 
 # Design Patterns
 
+## Introduction
+
+Design patterns are formalized best practices that the programmer can use to solve common problems when designing an application or system.
+
+Design patterns can speed up the development process by providing tested, proven development paradigms.
+
+Reusing design patterns helps to prevent subtle issues that can cause major problems, and it also improves code readability for coders and architects who are familiar with the patterns.
+
+## <a name="list-of-design-patterns">List of Design Patterns</a>
+
+* **Creational Patterns**
+  **Creational design patterns** abstract the instantiation process. They help make a system independent of how its objects are created, composed, and represented.
+
+* **Structural Patterns**
+  **Structural patterns** are concerned with how classes and objects are composed to form larger structures.
+
+* **Behavioral Patterns**
+  **Behavioral patterns** are concerned with algorithms and the assignment of responsibilites between objects.
+
+* **Concurrency Patterns**
+  **Concurrency patterns** are those types of design patterns that deal with the multi-threaded programming paradigm.
+
+* **Presentation Tier Patterns**
+  **Presentation Tier patterns** are the top-most level of the application, this is concerned with translating tasks and results to something the user can understand.
+
+* **Architectural Patterns**
+  An **architectural pattern** is a general, reusable solution to a commonly occurring problem in software architecture within a given context.
+
+* **Integration Patterns**
+  **Integration patterns**are concerned with how software applications communicate and exchange data.
+
 ### **Architectural Pattern**
 > An **_architectural pattern_** is a general, reusable solution to a commonly occurring problem in software architecture within a given context. Architectural patterns are similar to software design pattern but have a broader scope.
 >
@@ -1036,3 +1067,160 @@ Use the Layers architecture when
   * You want clearly divide software responsibilities into different parts of the program.
   * You want to prevent a change from propagating throughout the application.
   * You want to make your application more maintainable and testable.
+
+#### Model-View-Controller
+![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Separate the user interface into three interconnected components: the model, the view and the controller. Let the model manage the data, the view display the data and the controller mediate updating the data and redrawing the display.
+
+##### Class Diagram
+![model-view-controller-pattern-uml-class-diagram](./assets/patterns/model-view-controller-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Model-View-Controller pattern when
+  * You want to clearly separate the domain data from its user interface representation
+
+#### Model-View-Presenter
+![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Intent
+Apply a "Separation of Concerns" principle in a way that allows developers to build and test user interfaces.
+
+##### Class Diagram
+![model-view-presenter-pattern-uml-class-diagram](./assets/patterns/model-view-presenter-pattern-uml-class-diagram.png)
+
+##### Applicability
+Use the Model-View-Presenter in any of the following situations
+  * When you want to improve the "Separation of Concerns" principle in presentation logic
+  * When a user interface development and testing is necessary.
+
+##### Real world examples
+  * [MVP4J](https://github.com/amineoualialami/mvp4j)
+  
+#### Model-View-Controller
+![decoupling](./assets/patterns/decoupling.PNG) ![architectural](./assets/patterns/architectural.PNG)
+---
+##### Also known as
+Model–View–Binder
+
+##### Intent
+To apply ["Separation of Concerns"](https://java-design-patterns.com/principles/#separation-of-concerns) to separate the logic from the UI components and allow developers to work on UI without affecting the logic and vice versa.
+
+##### Explanation
+Wikipedia says
+
+> Model–view–viewmodel (MVVM) is a software architectural pattern that facilitates the separation of the development of the graphical user interface (the view) – be it via a markup language or GUI code – from the development of the business logic or back-end logic (the model) so that the view is not dependent on any specific model platform.
+>
+
+**Programmatic Example**
+
+Zkoss implementation:
+
+> ViewModel will hold the business logic and expose the data from model to View
+>
+
+```java
+public class BookViewModel {
+  @WireVariable
+  private List<Book> bookList;
+  private Book selectedBook;
+  private BookService bookService = new BookServiceImpl();
+  
+  public Book getSelectedBook() {
+    return selectedBook;
+  }
+
+  @NotifyChange("selectedBook")
+  public void setSelectedBook(Book selectedBook) {
+    this.selectedBook = selectedBook;
+  }
+
+  public List<Book> getBookList() {
+    return bookService.load();
+  }
+  
+  /** Deleting a book.
+   */
+  @Command
+  @NotifyChange({"selectedBook","bookList"})
+  public void deleteBook() {
+    if (selectedBook != null) {
+      getBookList().remove(selectedBook);
+      selectedBook = null;
+    }
+}
+```
+
+> View will have no logic, only UI elements
+>
+
+```xml
+<zk>
+<window title="List of Books" border="normal" width="600px" apply="org.zkoss.bind.BindComposer" viewModel="@id('vm') @init('com.iluwatar.model.view.viewmodel.BookViewModel')">
+    <vbox hflex="true">
+        <listbox model="@bind(vm.bookList)" selectedItem="@bind(vm.selectedBook)" height="400px" mold="paging">
+            <listhead>
+                <listheader label="Book Name"/>
+                <listheader label="Author"/>               
+            </listhead>
+            <template name="model" var="book">
+                <listitem >
+                    <listcell label="@bind(book.name)"/>
+                    <listcell label="@bind(book.author)"/>
+                </listitem>
+            </template>
+        </listbox>
+    </vbox>
+    <toolbar>
+        <button label="Delete" onClick="@command('deleteBook')" disabled="@load(empty vm.selectedBook)" />
+    </toolbar>
+    <hbox style="margin-top:20px" visible="@bind(not empty vm.selectedBook)">
+		<vbox>
+			<hlayout>
+				Book Name : <label value="@bind(vm.selectedBook.name)" style="font-weight:bold"/>
+			</hlayout>
+			<hlayout>
+				Book Author : <label value="@bind(vm.selectedBook.author)" style="font-weight:bold"/>
+			</hlayout>
+			<hlayout>
+				Book Description : <label value="@bind(vm.selectedBook.description)" style="font-weight:bold"/>
+			</hlayout>
+		</vbox>
+	</hbox>
+</window>
+</zk>
+```
+
+To deploy the example, go to model-view-viewmodel folder and run:
+
+  * mvn clean install
+  * mvn jetty:run -Djetty.http.port=9911
+  * Open browser to address: http://localhost:9911/model-view-viewmodel/
+
+##### Class Diagram
+![model-view-viewmodel-pattern-uml-class-diagram](./assets/patterns/model-view-viewmodel-pattern-uml-class-diagram.png)
+
+##### Applicability
+* When looking for clean architecture, with better reusability, testability and maintainability.
+
+##### Tutorials
+* [Zkoss Demo](https://www.zkoss.org/zkdemo/getting_started/mvvm)
+* [Learn MVVM](https://www.learnmvvm.com/)
+* [Android Developer CodeLabs](https://codelabs.developers.google.com/codelabs/android-databinding)
+
+##### Typical Use Cases
+* Android apps
+* .NET framework applications
+* JavaScript applications
+
+##### Real World Examples
+* ZK Framework [zkoss.org](https://www.zkoss.org/)
+* KnockoutJS [knockoutjs.com](https://knockoutjs.com/)
+
+##### Consequences
+* John Gossman has criticized the MVVM pattern and its application in specific uses, stating that MVVM can be "overkill" 
+  when creating simple user interfaces. For larger applications, he believes that generalizing the viewmodel upfront 
+  can be difficult, and that large-scale data binding can lead to lower performance - Ref: [MVVM-Wiki](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel)
+* Can be hard to design ViewModel for larger applications.
+* For complex databinding, debugging can be difficult.
